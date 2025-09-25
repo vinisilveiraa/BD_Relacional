@@ -1,2 +1,4 @@
 # BancodeDadosRelacional
-Continuação da matéria de Banco de Dados 1 
+
+https://github.com/DSM-Fatec-Jahu/bd-relacional-02-25.git 
+-- Material de Aula
