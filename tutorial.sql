@@ -60,21 +60,70 @@ ALTER TABLE usuarios
 	AFTER data_nascimento; -- especifica onde adicionar
     -- SET nao usamos pq ele e outra tabela N:M 
     -- SET permite null e multiselecao
+    
+ALTER TABLE usuarios 
+	CHANGE COLUMN nome nome_completo VARCHAR(255) NOT NULL;
 
 -- ALTER TABLE modifica uma tabela, PRECISA ABRIR ALTER TABLE ANTES DE ESPECIFICAR A ACAO
 	-- Modificar uma coluna:
-		ALTER TABLE usuarios
-		ADD COLUMN novo_tipo_dados VARCHAR(255);
+			ALTER TABLE usuarios
+			ADD COLUMN novo_tipo_dados VARCHAR(255);
+            
 	-- Modificar uma coluna:
-		ALTER TABLE usuarios
-		MODIFY COLUMN novo_tipo_dados INT;
+			ALTER TABLE usuarios
+			MODIFY COLUMN novo_tipo_dados INT;
+            
+	-- Trocar nome
+			ALTER TABLE usuarios 
+            CHANGE COLUMN novo_tipo_dados nome_trocado VARCHAR(255); -- colocar nome antigo, nome novo e depois especificar novamente todos os tipos
+            
 	-- Remover uma coluna:
-		ALTER TABLE usuarios
-		DROP COLUMN novo_tipo_dados;
-		
+			ALTER TABLE usuarios DROP COLUMN nome_trocado;
+            
 	-- Adicionar uma restrição:
-		ALTER TABLE nome_tabela
-		ADD CONSTRAINT nome_restricao UNIQUE (coluna);
+			-- ALTER TABLE nome_tabela ADD CONSTRAINT nome_restricao UNIQUE (coluna);
+            
 	-- Remover uma restrição:
-		ALTER TABLE nome_tabela
-		DROP CONSTRAINT nome_restricao;
+			-- ALTER TABLE nome_tabela DROP CONSTRAINT nome_restricao;
+
+CREATE TABLE IF NOT EXISTS produtos(
+	id_produto BIGINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
+	nome VARCHAR(255) NOT NULL,
+    valor DECIMAL(10,2) NOT NULL,
+    quantidade DECIMAL (6,3) NOT NULL,
+    validade DATE NULL, -- CAMPOS DATA E HORA PRECISAM SER ESPECIFICADOS NULL CASO SEJAM
+    
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    alterado_em DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	deletado_em DATETIME NULL
+);
+CREATE TABLE IF NOT EXISTS categorias(
+	id_categoria BIGINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    nome VARCHAR(255) NOT NULL,
+    
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    alterado_em DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deletado_em DATETIME NULL
+);
+
+CREATE TABLE IF NOT EXISTS produtos_categorias(
+	produto_id BIGINT UNSIGNED NOT NULL,
+    categoria_id BIGINT UNSIGNED NOT NULL,
+    
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+	alterado_em DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deletado_em DATETIME NULL,
+    
+    -- CRIANDO CHAVE PRIMARIA COMPOSTA dentro da table
+    PRIMARY KEY (produto_id, categoria_id),
+    FOREIGN KEY (produto_id) REFERENCES produtos(id_produto)
+);
+
+	-- criando um relacionamento depois da tabela ja criada 
+    -- informar o nome do bd no script e uma boa pratica, mas pouco usada para comandos simples
+ALTER TABLE dbsistema.produtos_categorias
+ADD CONSTRAINT fk_produtos_categorias_categorias -- ao fazer o alter table e obrigatorio informar o nome do relacionamento
+FOREIGN KEY (categoria_id) REFERENCES categorias (id_categoria);
+
+-- NA ABA DE CIMA database -> reverse engineer -> next toda vida
+-- isso cria um modelo
