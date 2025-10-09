@@ -1,7 +1,7 @@
 # apaga a db pra garantir a estrutura final 
 DROP DATABASE IF EXISTS loja_revisao;
 
-CREATE DATABASE IF NOT EXISTS loja_revisao CHARACTER SET utf8mb4 COLLATE utfmb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS loja_revisao CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 # tem que definir o bd a ser usado
 USE loja_revisao;
@@ -55,8 +55,68 @@ CREATE TABLE IF NOT EXISTS vendas(
     -- em campos de DATA/HORA e importante confirmar que ele aceita null
     deletado_em DATETIME NULL,
     
-    FOREIGN KEY (cliente_id) REFERENCES clientes(id_cliente)
+    CONSTRAINT fk_vendas_clientes FOREIGN KEY (cliente_id) REFERENCES clientes(id_cliente)
+    # constraint adiciona um nome a chave
 );
 
+CREATE TABLE IF NOT EXISTS vendas_produtos(
+	id_venda_produto BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    venda_id BIGINT UNSIGNED NOT NULL,
+    produto_id BIGINT UNSIGNED NOT NULL,
+    quantidade DECIMAL(10,3) NOT NULL,
+    preco_unitario DECIMAL(10,2) NOT NULL,
+    desconto DECIMAL(10,2) DEFAULT 0,
+    
+    -- logs 
+	criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+    -- somante o sql possui o ON UPDATE
+    alterado_em DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    -- em campos de DATA/HORA e importante confirmar que ele aceita null
+    deletado_em DATETIME NULL,
+    
+    FOREIGN KEY (produto_id) REFERENCES produtos(id_produto),
+	FOREIGN KEY (venda_id) REFERENCES vendas(id_venda)
+);
 
+-- modificacoes estruturais
+-- altere o nome da tabela clientes para usuarios 
+ALTER TABLE clientes RENAME TO usuarios;
+-- atualiza o nome de qualquer chave estrangeira que esteka relacionada a tabela clientes
+ALTER TABLE usuarios CHANGE COLUMN id_cliente id_usuario BIGINT UNSIGNED NOT NULL AUTO_INCREMENT;
 
+DESCRIBE loja_revisao.usuarios;
+
+# primeiro remove a chave estrangeira por nome (constraint)
+ALTER TABLE vendas DROP FOREIGN KEY fk_vendas_clientes;
+
+# altera a coluna
+ALTER TABLE vendas CHANGE COLUMN cliente_id usuario_id BIGINT UNSIGNED NOT NULL;
+
+# adiciona novamente o relacionamento
+
+ALTER TABLE vendas
+	ADD CONSTRAINT fk_vendas_usuarios
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario);
+    
+-- adicao e modificacao de campos
+-- adiciona um campo chamado ativo em cada tabela, inicialmente do tipo TINYINT
+
+ALTER TABLE vendas ADD COLUMN ativo TINYINT NOT NULL DEFAULT 1;
+-- demais campos abaixo...
+-- alter table ....
+
+ALTER TABLE vendas MODIFY COLUMN ativo CHAR(1) NOT NULL DEFAULT 'S';
+-- demais campos abaixo...
+-- alter table ....
+
+DESCRIBE loja_revisao.vendas;
+
+-- gerenciamento de acesso
+
+-- crie um usuario sgbd
+CREATE USER IF NOT EXISTS 'vini'@'%' IDENTIFIED BY '123';
+-- de permissoes crud
+GRANT SELECT, INSERT, CREATE, DELETE ON loja_revisao TO 'vini'@'%';
+
+-- aplica permissoes
+FLUSH PRIVILEGES;
